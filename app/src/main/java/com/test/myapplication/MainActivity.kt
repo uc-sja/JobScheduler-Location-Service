@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -13,6 +14,7 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
+import androidx.core.app.JobIntentService
 
 //- [ ] One major important difference between intent service and normal service
 // (irrespective of oreo update) is that in intent service as soon as we kill the
@@ -35,18 +37,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        val intent = Intent(this, IntentService::class.java)
-//        intent.putExtra("inputExtra", "job intent")
-//
-//        startService(intent)
 
         var start = findViewById<TextView>(R.id.start)
         var stop = findViewById<TextView>(R.id.stop)
 
 
+        //IntentSercice
+        
+//        start.setOnClickListener(View.OnClickListener {
+//                val intent = Intent(this, IntentService::class.java)
+//                intent.putExtra("inputExtra", "job intent")
+//                startService(intent)
+//
+//        })
+
+        //Job Scheduler
 
         start.setOnClickListener(View.OnClickListener {
             if(LocationPermissionsGranted()){
+
                 scheduleJob()
 
             } else {
@@ -54,6 +63,12 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
+        //Job IntentService
+
+//        start.setOnClickListener(View.OnClickListener {
+//            val intent = Intent(this, JobIntentServiceExample::class.java)
+//            JobIntentServiceExample.enqueTask(this, intent)
+//        })
 
 
 
@@ -89,10 +104,12 @@ class MainActivity : AppCompatActivity() {
 
 
     fun scheduleJob(){
+
         var componentName = ComponentName(this, JobSchedulerService::class.java)
         var jobInfo: JobInfo = JobInfo.Builder(123, componentName)
-            .setPeriodic(15*60*1000L)
             .setPersisted(true)
+            .setPeriodic(1000)
+            .setRequiresCharging(true)
             .build()
         var jobScheduler: JobScheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
         var result = jobScheduler.schedule(jobInfo)
@@ -101,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         } else{
             Log.d(TAG, "onCreate: schedule failded")
         }
+
 
     }
 }

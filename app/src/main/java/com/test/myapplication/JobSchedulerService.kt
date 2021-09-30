@@ -17,10 +17,17 @@ import com.google.android.gms.location.*
 
 private const val TAG = "JobSchedulerService"
 
+
+//- [ ] Irrespective of android version if job scheduler if task is killed before the
+// code within onStartJob is completed IN JOBSCHEDULER and onHandleIntent is completed
+// in JOBINTENTSERVICE, then the task will be restarted within 1 sec. There will also be a
+// message on log as:  “Scheduling restart of crashed service com.test.myapplication/.JobSchedulerService
+// in 1000ms”
+
 class JobSchedulerService: JobService() {
-    private lateinit var locationRequest1: LocationRequest
-    private lateinit  var locationCallback1: LocationCallback
-    private lateinit var fusedLocationClient1: FusedLocationProviderClient
+    private  var locationRequest1: LocationRequest? = null
+    private   var locationCallback1: LocationCallback? = null
+    private  var fusedLocationClient1: FusedLocationProviderClient? = null
     var isRunning = false
 
     companion object{
@@ -29,6 +36,7 @@ class JobSchedulerService: JobService() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "onCreate: ")
 
     }
     private fun createLocationRequest(){
@@ -68,12 +76,17 @@ class JobSchedulerService: JobService() {
 
 
 
-        fusedLocationClient1.requestLocationUpdates(locationRequest1, locationCallback1, Looper.getMainLooper())
+        fusedLocationClient1?.requestLocationUpdates(locationRequest1, locationCallback1, Looper.getMainLooper())
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
+        Log.d(TAG, "onStartJob: ")
         isRunning = true
 
+        if(locationRequest1 != null){
+            startLocationUpdates()
+            return true
+        }
         locationRequest1 = LocationRequest.create()?.apply {
             interval = 1000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -90,37 +103,23 @@ class JobSchedulerService: JobService() {
             }
         }
 
-//        doBackgroundTask(params)
 
         startLocationUpdates()
         return true
     }
 
-    @SuppressLint("MissingPermission")
-    private fun doBackgroundTask(params: JobParameters?) {
-        Log.d(TAG, "doBackgroundTask: ")
-        Thread {
-                for (i in 1 until 101){
 
-                    Log.d(TAG, "doBackgroundTask : $i")
-                    if(isRunning){
-                        SystemClock.sleep(5000)
-                        var fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-                        fusedLocationClient.lastLocation
-                            .addOnSuccessListener { location : Location? ->
-                                Log.d(TAG, "doBackgroundTask: ")
-                                // Got last known location. In some rare situations this can be null.
-                            }
-
-                    }
-                }
-                jobFinished(params, false)
-           }.start()
-    }
-
+    //clear resources here to stop redundancy
     override fun onStopJob(params: JobParameters?): Boolean {
         Log.d(TAG, "onStopJob: ")
         isRunning = false
+        stopLocationUpdates()
         return  true
+    }
+
+    private fun stopLocationUpdates() {
+        if(locationCallback1 != null){
+            fusedLocationClient1?.removeLocationUpdates(locationCallback1)
+        }
     }
 }

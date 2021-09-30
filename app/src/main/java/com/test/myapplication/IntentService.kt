@@ -2,6 +2,7 @@ package com.test.myapplication
 
 import android.app.IntentService
 import android.content.Intent
+import android.os.IBinder
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -11,6 +12,8 @@ class IntentService: IntentService("BackgroundService") {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "onCreate: ")
+        
 
 //        val notification = NotificationCompat.Builder(this, App.CHANNEL_ID)
 //            .setContentTitle("Example IntentService")
@@ -22,6 +25,8 @@ class IntentService: IntentService("BackgroundService") {
     }
 
     override fun onHandleIntent(intent: Intent?) {
+
+        Log.d(TAG, "onHandleIntent: ")
 
         var input = intent?.getStringExtra("inputExtra")
 
@@ -35,5 +40,16 @@ class IntentService: IntentService("BackgroundService") {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: onHandleIntent")
+    
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        Log.d(TAG, "onBind: ")
+        return super.onBind(intent)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return super.onStartCommand(intent, flags, startId)
+        Log.d(TAG, "onStartCommand: ")
     }
 }
